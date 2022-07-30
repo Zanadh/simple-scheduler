@@ -19,22 +19,20 @@ const ConfirmDialog: FunctionComponent<Prop> = ({ open, onClose, onYes, title, d
   return (
     <Dialog
       open={open}
-      onClose={() => onClose()}
+      onClose={() => !loading && onClose()}
       aria-labelledby="alert-dialog-title"
       aria-describedby="alert-dialog-description"
-      disableBackdropClick={loading}
-      disableEscapeKeyDown={loading}
     >
       <DialogTitle id="alert-dialog-title">
-        { title }
+        {title}
       </DialogTitle>
       <DialogContent>
         <DialogContentText id="alert-dialog-description">
-          { description }
+          {description}
         </DialogContentText>
       </DialogContent>
       <DialogActions>
-        { loading ? <CircularProgress style={{ marginBottom: 10, marginRight: 10 }} /> : (
+        {loading ? <CircularProgress style={{ marginBottom: 10, marginRight: 10 }} /> : (
           <div>
             <Button onClick={() => onClose()} color="primary">
               Cancel
@@ -43,7 +41,7 @@ const ConfirmDialog: FunctionComponent<Prop> = ({ open, onClose, onYes, title, d
               Yes
             </Button>
           </div>
-        ) }
+        )}
       </DialogActions>
     </Dialog>
   );

@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useEffect, useState } from "react";
+import React, { ChangeEvent, useEffect, useMemo, useState } from "react";
 import Grid from "@material-ui/core/Grid";
 import { makeStyles } from "@material-ui/core/styles";
 import Card from "@material-ui/core/Card";
@@ -25,6 +25,7 @@ import {
   updateShiftById,
 } from "../helper/api/shift";
 import { AccessTime } from "@material-ui/icons";
+import { IShift } from "../interfaces";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -73,21 +74,26 @@ const defaultValues = {
   startTime: set(new Date(), { hours: 0, minutes: 0, seconds: 0 }),
   endTime: new Date(),
 };
+interface IHistoryState {
+  firstDateOfWeek?: Date
+}
 
 const ShiftForm = () => {
-  const history = useHistory();
+  const history = useHistory<IHistoryState>();
   const { id } = useParams<PathParams>();
 
   const classes = useStyles();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [submitLoading, setSubmitLoading] = useState<boolean>(false);
   const [errMsg, setErrMsg] = useState<string | null>("");
-  const [currentData, setCurrentData] = useState<any | null>(null);
+  const [currentData, setCurrentData] = useState<IShift | null>(null);
+
+  const isPublished = !!currentData?.week?.isPublished;
 
   const { register, handleSubmit, errors, setValue, watch } = useForm<FormData>(
     {
       resolver: joiResolver(formSchema),
-      defaultValues,
+      defaultValues: { ...defaultValues, date: history.location.state?.firstDateOfWeek || defaultValues.date },
     }
   );
 
@@ -146,13 +152,17 @@ const ShiftForm = () => {
     setValue("endTime", v);
   };
 
+  const backToShiftPage = () => {
+    history.push("/shift", history.location.state);
+  }
+
   const onSubmit = handleSubmit(async ({ name, date, startTime, endTime }) => {
     try {
       setSubmitLoading(true);
       setErrMsg("");
       const formattedDate = format(date!, "yyyy-MM-dd");
-      const formattedStartTime = format(startTime!, "HH:mm");
-      const formattedEndTime = format(endTime!, "HH:mm");
+      const formattedStartTime = format(startTime!, "HH:mm") + ':00';
+      const formattedEndTime = format(endTime!, "HH:mm") + ':00';
 
       const payload = {
         name,
@@ -166,7 +176,7 @@ const ShiftForm = () => {
       } else {
         await createShifts(payload);
       }
-      history.push("/shift");
+      backToShiftPage()
     } catch (error) {
       const message = getErrorMessage(error);
       setErrMsg(message);
@@ -188,8 +198,7 @@ const ShiftForm = () => {
             <Button
               className={classes.backBtn}
               variant="contained"
-              component={RouterLink}
-              to="/shift"
+              onClick={backToShiftPage}
               disabled={submitLoading}
             >
               Back
@@ -221,6 +230,7 @@ const ShiftForm = () => {
                       onChange={handleNameChange}
                       error={errors.name !== undefined}
                       helperText={errors.name?.message}
+                      disabled={isPublished}
                     />
                   </Grid>
                   <Grid item xs={4}>
@@ -239,8 +249,10 @@ const ShiftForm = () => {
                         KeyboardButtonProps={{
                           "aria-label": "change date",
                         }}
+                        //onMonthChange={ } TODO: fetch published week to prevalidate weeks availability
                         error={errors.hasOwnProperty("date")}
                         helperText={errors.date && errors.date.message}
+                        readOnly={isPublished}
                       />
                     </MuiPickersUtilsProvider>
                   </Grid>
@@ -262,6 +274,7 @@ const ShiftForm = () => {
                           errors.startTime && errors.startTime.message
                         }
                         keyboardIcon={<AccessTime />}
+                        readOnly={isPublished}
                       />
                     </MuiPickersUtilsProvider>
                   </Grid>
@@ -281,6 +294,7 @@ const ShiftForm = () => {
                         error={errors.hasOwnProperty("endTime")}
                         helperText={errors.endTime && errors.endTime.message}
                         keyboardIcon={<AccessTime />}
+                        readOnly={isPublished}
                       />
                     </MuiPickersUtilsProvider>
                   </Grid>
@@ -297,6 +311,7 @@ const ShiftForm = () => {
                 form="myForm"
                 variant="contained"
                 color="primary"
+                disabled={isPublished}
                 className={classes.saveBtn}
               >
                 Save
