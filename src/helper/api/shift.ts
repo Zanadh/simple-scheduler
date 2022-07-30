@@ -5,7 +5,6 @@ type GetShiftPropsInterface = {
   [key in GetShiftParamsType]: string | string[];
 };
 
-// TODO: fix interfaces
 export const getShifts = async (props?: GetShiftPropsInterface) => {
   const api = getAxiosInstance()
   const { data } = await api.get("/shifts?order[date]=DESC&order[startTime]=ASC", { params: props });

@@ -40,4 +40,4 @@ REACT_APP_API_BASE_URL="http://localhost:3000/api/v1"
 TODO: add redux
 TODO: setup tsconfig for dynamic import
 TODO: setup eslint + format code
-TODO: fix interfaces
+TODO: add toast for user actions

@@ -9,7 +9,7 @@ import DataTable from "react-data-table-component";
 import IconButton from "@material-ui/core/IconButton";
 import DeleteIcon from "@material-ui/icons/Delete";
 import EditIcon from "@material-ui/icons/Edit";
-import { useHistory, useLocation } from "react-router-dom";
+import { useHistory } from "react-router-dom";
 import ConfirmDialog from "../components/ConfirmDialog";
 import Alert from "@material-ui/lab/Alert";
 import { Link as RouterLink } from "react-router-dom";
@@ -43,11 +43,12 @@ const useStyles = makeStyles((theme) => ({
 interface ActionButtonProps {
   id: string;
   onDelete: () => void;
+  onEdit: () => void;
   isPublished?: boolean
 }
 const ActionButton: FunctionComponent<ActionButtonProps> = ({
-  id,
   onDelete,
+  onEdit,
   isPublished
 }) => {
   return (
@@ -55,8 +56,7 @@ const ActionButton: FunctionComponent<ActionButtonProps> = ({
       <IconButton
         size="small"
         aria-label="delete"
-        component={RouterLink}
-        to={`/shift/${id}/edit`}
+        onClick={onEdit}
         disabled={isPublished}
       >
         <EditIcon fontSize="small" />
@@ -83,7 +83,6 @@ interface IHistoryState {
 const Shift = () => {
   const classes = useStyles();
   const history = useHistory<IHistoryState>();
-  const { search } = useLocation();
 
   const [rows, setRows] = useState<IShift[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -96,12 +95,6 @@ const Shift = () => {
 
   const isAllShiftPublished = useMemo(() =>
     (!!rows.length && !rows.find(v => v.week?.isPublished === false)), [rows])
-
-
-  //TODO: select date by url query
-  const query = useMemo(() => new URLSearchParams(search), [search]);
-
-  console.log("<<> query", { query: query.get("name"), search })
 
   const onDeleteClick = (id: string) => {
     setSelectedId(id);
@@ -157,7 +150,7 @@ const Shift = () => {
     {
       name: "Actions",
       cell: (row: any) => (
-        <ActionButton id={row.id} onDelete={() => onDeleteClick(row.id)} isPublished={row.week?.isPublished} />
+        <ActionButton id={row.id} onEdit={() => history.push(`/shift/${row.id}/edit`, { firstDateOfWeek })} onDelete={() => onDeleteClick(row.id)} isPublished={row.week?.isPublished} />
       ),
     },
   ]
@@ -170,8 +163,6 @@ const Shift = () => {
       if (selectedId === null) {
         throw new Error("ID is null");
       }
-
-      console.log(deleteDataById);
 
       await deleteShiftById(selectedId);
 
